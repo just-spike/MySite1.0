@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #1a1a1a;
+  --fg: #ffffff;
+  --muted: #a0a0a0;
+  --accent: #646cff;
+  --gray-block: #333333;
+  --border: #444444;
+  --maxw: 1080px;
+  --gap: 48px;
+  --tocw: 200px;
+  --tocw-sm: 80px;
+  --app-font: 'Fusion Pixel 12px Proportional SC', sans-serif;
+  --app-font-modern: 'Microsoft YaHei', '微软雅黑', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+}
+
+html.mode-modern {
+  --app-font: var(--app-font-modern);
+}
+
+html.mode-modern .font-pixel {
+  font-family: var(--app-font) !important;
+}
+
+
+
+body {
+  background-color: var(--bg);
+  color: var(--fg);
+  font-family: var(--app-font);
+  line-height: 1.6;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
