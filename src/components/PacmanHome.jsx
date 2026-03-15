@@ -1,76 +1,77 @@
-import React, { useState } from 'react';
+import React from 'react';
 import PacmanGame from './PacmanGame';
+import { useNavigate } from 'react-router-dom';
 
 const PacmanHome = ({ onEnter }) => {
-  const [gameStarted, setGameStarted] = useState(false);
+  const navigate = useNavigate();
+  // Game automatically starts
+  const gameStarted = true;
   
-  // Configuration
-  const h1FontSize = "text-xl md:text-2xl"; 
+  // Navigation items for the bottom
+  const navItems = [
+    { label: '关于我', id: 'bio-header', path: '/' },
+    { label: '作品集', id: 'portfolio-gallery', path: '/portfolio' },
+    { label: '游戏', id: 'games', path: '/games' },
+    { label: '工具', id: 'tools', path: '/tools' }
+  ];
+
+  const handleNavClick = (item) => {
+    // If it's the home page/bio, trigger onEnter animation
+    if (item.path === '/') {
+        onEnter();
+        // Wait for animation then scroll
+        setTimeout(() => {
+            const el = document.getElementById(item.id);
+            if (el) {
+                const rectTop = el.getBoundingClientRect().top + window.pageYOffset;
+                const target = rectTop - window.innerHeight * 0.3;
+                window.scrollTo({ top: target, behavior: 'smooth' });
+            }
+        }, 100);
+    } else {
+        // For other pages, navigate directly
+        navigate(item.path);
+    }
+  };
 
   return (
     <div className="h-screen w-full bg-black text-white font-pixel flex flex-col items-center justify-center p-0 overflow-hidden relative">
       
-      {/* Centered Container */}
-      <div className="flex flex-col items-center justify-center">
+      {/* Centered Content */}
+      <div className="flex flex-col items-center justify-center gap-8 z-20 flex-grow relative">
         
-        {/* Game Area */}
-        <div 
-          className="relative bg-black flex items-center justify-center"
-          onClick={() => !gameStarted && setGameStarted(true)}
-        >
-          <div className="relative flex items-center justify-center">
-              {!gameStarted && (
-              <div className="absolute inset-0 flex items-center justify-center z-10 cursor-pointer bg-gradient-to-b from-black/60 via-black/80 to-black">
-                  <div className="text-center">
-                    <div className="relative">
-                      <p className="text-2xl text-yellow-400 mb-2 font-pixel animate-pulse">CLICK TO START</p>
-                      <p className="text-sm text-gray-400 font-pixel animate-bounce">INSERT COIN</p>
-                      {/* Decorative pixel elements */}
-                      <div className="absolute -left-8 top-0 text-yellow-400/30 text-lg">◄</div>
-                      <div className="absolute -right-8 top-0 text-yellow-400/30 text-lg">►</div>
-                    </div>
-                  </div>
-              </div>
-              )}
-              {/* Fixed size game for consistency */}
-              <PacmanGame active={gameStarted} fixedSize={true} />
-          </div>
+        {/* Game Area - Positioned behind title */}
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[-1] opacity-60 pointer-events-none flex items-center justify-center">
+             <div className="w-[120vw] md:w-[800px] h-[300px] flex items-center justify-center overflow-hidden mask-image-gradient">
+                 <PacmanGame active={gameStarted} fixedSize={false} maxWidth={1.0} maxHeight={1.0} />
+             </div>
         </div>
 
-        {/* Bottom Gradient Overlay - Smooth transition from game to content */}
-        <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none z-10" />
-
-        {/* Bottom Info Section (Text + Button) */}
-        <div 
-            className="absolute bottom-8 left-0 w-full px-8 flex flex-col items-center"
-            style={{ maxWidth: '900px' }} 
-        >
-            {/* Title and Button Row */}
-            <div className="flex flex-row items-center justify-between w-full">
-                <h1 className={`${h1FontSize} leading-relaxed text-white font-pixel text-left pointer-events-none`} style={{ fontFamily: '"Fusion Pixel 10px Mono ja", monospace' }}>
-                    欢迎来到<br/>
-                    粟鹏的数字空间
-                </h1>
-                
-                {/* Entry Button - Enhanced with animation */}
-                <button
-                    onClick={onEnter}
-                    className="relative group flex items-center gap-4 px-8 py-4 bg-[#333333] text-white transition-all duration-300 hover:bg-[#444444] overflow-hidden font-pixel text-sm tracking-widest"
-                >
-                    {/* Animated background fill */}
-                    <span className="absolute inset-0 bg-white scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
-                    <span className="relative z-10 group-hover:text-black transition-colors duration-300 flex items-center gap-4">
-                        <span>进入</span>
-                        <span className="transform group-hover:translate-x-1 transition-transform duration-300">→</span>
-                    </span>
-                </button>
-            </div>
-            
-            {/* Subtitle */}
-            <p className="text-xs text-gray-500 font-pixel tracking-wider text-left mt-3 pointer-events-none w-full">Since 2025</p>
-        </div>
+        {/* Title */}
+        <h1 className="text-6xl md:text-8xl font-bold tracking-tighter text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)] animate-pulse cursor-pointer relative z-10" onClick={onEnter}>
+          Hello, World
+        </h1>
 
       </div>
+
+      {/* Bottom Navigation Links */}
+      <div className="absolute bottom-12 z-20 w-full flex justify-center">
+        <div className="flex flex-wrap justify-center gap-6 md:gap-12 px-4">
+          {navItems.map((item, index) => (
+            <button
+              key={index}
+              onClick={() => handleNavClick(item)}
+              className="text-white/70 hover:text-white hover:scale-110 transition-all duration-300 font-pixel tracking-widest text-sm md:text-base border-b border-transparent hover:border-white pb-1"
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      
+      {/* Background Gradient for depth */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60 pointer-events-none z-10" />
+      
     </div>
   );
 };

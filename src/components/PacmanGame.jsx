@@ -1,36 +1,31 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 // Configuration
-const SPEED_PACMAN = 0.004; // Tiles per ms
+const SPEED_PACMAN = 0.003; // Tiles per ms
 const SPEED_GHOST = 0.002;  // Tiles per ms
 const WALL_COLOR = '#333333ff';
 const DOT_COLOR = '#bebebeff';
+const TILE_SIZE = 16;
 
 // Maze map: 1=Wall, 0=Dot, 2=Empty, 3=Power, 4=Pacman, 5=Ghost
-// Extended to be taller for better aspect ratio
+// Adjusted to be more game-like with interesting paths
 const MAZE = [
-  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-  [1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
-  [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
-  [1,3,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,3,1,1,3,1,1,1,1,1,0,1,1,1,1,3,1],
-  [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
-  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-  [1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1],
-  [1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1],
-  [1,0,0,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1],
-  [1,1,1,1,1,1,0,1,1,1,1,1,2,1,1,2,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,2,1],
-  [2,2,2,2,2,1,0,1,1,2,2,2,2,2,2,2,2,2,2,1,1,0,1,2,2,2,2,2,2,2,2,2,2,1,0,1,1,2,2,2,2,2],
-  [1,1,1,1,1,1,0,1,1,2,1,1,1,2,2,1,1,1,2,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,2,1,1,1,2],
-  [2,2,2,2,2,2,0,2,2,2,1,2,2,5,5,2,2,1,2,2,2,0,2,2,2,2,2,2,2,2,2,2,2,2,0,2,2,2,1,2,2,5],
-  [1,1,1,1,1,1,0,1,1,2,1,2,2,2,2,2,2,1,2,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,2,1,2,2,2],
-  // Mirrored bottom section
-  [1,0,0,0,0,0,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1],
-  [1,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,1,1,0,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1],
-  [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
-  [1,3,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,3,1],
-  [1,1,1,0,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,0,1,1,0,1,1,0,1,1,1],
-  [1,0,0,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
-  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,1,1,1,1,1,1,0,1,1,1,1,0,1,1,1,1,0,1,0,1,1,1,1,0,1,1,1,1,0,1,1,1,1,1,1,1,1,0,1],
+  [1,0,1,1,1,1,1,1,0,1,1,1,1,0,1,1,1,1,0,1,0,1,1,1,1,0,1,1,1,1,0,1,1,1,1,1,1,1,1,0,1],
+  [1,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,1],
+  [1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,0,1,1,0,1,1,1,1,0,1],
+  [1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,0,1,1,0,1,1,1,1,0,1],
+  [1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,4,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1],
+  [1,1,1,1,1,1,0,1,1,0,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1],
+  [2,2,2,2,2,1,0,1,1,0,1,2,2,2,1,1,1,5,5,5,1,1,1,2,2,2,1,1,0,1,1,0,1,2,2,2,2,2,2,2,2],
+  [1,1,1,1,1,1,0,1,1,0,1,2,2,2,1,2,2,2,2,2,2,2,1,2,2,2,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1],
+  [1,0,0,0,0,0,0,0,0,0,1,2,2,2,1,1,1,1,1,1,1,1,1,2,2,2,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,1,1,1,1,0,1,1,1,1,1,1,0,0,0,0,0,0,1,0,0,0,0,0,0,1,1,1,1,1,1,0,1,1,1,1,1,1,0,1],
+  [1,0,1,1,1,1,0,1,1,1,1,1,1,0,1,1,1,1,0,1,0,1,1,1,1,0,1,1,1,1,1,1,0,1,1,1,1,1,1,0,1],
+  [1,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 ];
 
 const DIRS = {
@@ -54,8 +49,8 @@ const PacmanGame = ({ active, fixedSize = false, maxWidth = 0.6, maxHeight = 0.7
   const [win, setWin] = useState(false);
   
   // Responsive Tile Size
-  const [tileSize, setTileSize] = useState(20);
-  const tileSizeRef = useRef(20);
+  const [tileSize, setTileSize] = useState(TILE_SIZE);
+  const tileSizeRef = useRef(TILE_SIZE);
 
   // Game state stored in ref to avoid re-renders during game loop
   const gameState = useRef({
@@ -70,27 +65,9 @@ const PacmanGame = ({ active, fixedSize = false, maxWidth = 0.6, maxHeight = 0.7
   // Handle Resize
   useEffect(() => {
     const handleResize = () => {
-      if (fixedSize) {
-        // Use a fixed tile size if fixedSize is true
-        // 20px per tile results in 840px width (42 cols * 20)
-        const fixedTileSize = 20;
-        setTileSize(fixedTileSize);
-        tileSizeRef.current = fixedTileSize;
-        return;
-      }
-
-      const cols = MAZE[0].length;
-      const rows = MAZE.length;
-      // Target: fit within specified width/height ratio
-      const maxW = window.innerWidth * maxWidth;
-      const maxH = window.innerHeight * maxHeight; 
-      
-      const sizeW = maxW / cols;
-      const sizeH = maxH / rows;
-      
-      const newSize = Math.max(14, Math.min(sizeW, sizeH)); // Min 14px
-      setTileSize(newSize);
-      tileSizeRef.current = newSize;
+        // Always use fixed tile size as requested
+        setTileSize(TILE_SIZE);
+        tileSizeRef.current = TILE_SIZE;
     };
     
     handleResize();
@@ -100,6 +77,7 @@ const PacmanGame = ({ active, fixedSize = false, maxWidth = 0.6, maxHeight = 0.7
 
   // Input handling
   useEffect(() => {
+    // Keyboard support
     const handleKey = (e) => {
       if (!active || gameOver || win) return;
       
@@ -114,8 +92,54 @@ const PacmanGame = ({ active, fixedSize = false, maxWidth = 0.6, maxHeight = 0.7
         gameState.current.pacman.nextDir = nextDir;
       }
     };
+    
+    // Mouse movement support
+    const handleMouseMove = (e) => {
+        if (!active || gameOver || win || !canvasRef.current) return;
+        
+        const canvas = canvasRef.current;
+        const rect = canvas.getBoundingClientRect();
+        
+        // Calculate mouse position relative to canvas (visual space)
+        // We use clientX/Y which is relative to viewport, subtracting rect.left/top gets us canvas-relative
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        
+        // Use the current visual tile size for calculation
+        // The canvas is scaled by CSS, so we need to account for that if intrinsic size differs from display size
+        // But here we set width/height style to match canvas width/height, so 1:1 mapping usually
+        // However, let's be safe and use ratio
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        
+        const canvasX = mouseX * scaleX;
+        const canvasY = mouseY * scaleY;
+        
+        // Calculate grid position
+        const gridX = canvasX / tileSizeRef.current;
+        const gridY = canvasY / tileSizeRef.current;
+        
+        const pacman = gameState.current.pacman;
+        const diffX = gridX - pacman.x;
+        const diffY = gridY - pacman.y;
+        
+        // Only change direction if the mouse is far enough
+        if (Math.abs(diffX) > 0.5 || Math.abs(diffY) > 0.5) {
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                gameState.current.pacman.nextDir = diffX > 0 ? DIRS.RIGHT : DIRS.LEFT;
+            } else {
+                gameState.current.pacman.nextDir = diffY > 0 ? DIRS.DOWN : DIRS.UP;
+            }
+        }
+    };
+
     window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
+    window.addEventListener('mousemove', handleMouseMove);
+    
+    return () => {
+        window.removeEventListener('keydown', handleKey);
+        window.removeEventListener('mousemove', handleMouseMove);
+    };
   }, [active, gameOver, win]);
 
   // Main Game Logic & Loop
@@ -125,22 +149,34 @@ const PacmanGame = ({ active, fixedSize = false, maxWidth = 0.6, maxHeight = 0.7
     // Initialize Game
     const dots = [];
     const walls = [];
+    let pacmanStart = { x: 1, y: 1 };
+    const ghostStarts = [];
     
     MAZE.forEach((row, y) => {
         row.forEach((cell, x) => {
             if (cell === 1) walls.push({ x, y });
             if (cell === 0) dots.push({ x, y, type: 'dot' });
             if (cell === 3) dots.push({ x, y, type: 'power' });
+            if (cell === 4) pacmanStart = { x, y };
+            if (cell === 5) ghostStarts.push({ x, y });
         });
     });
 
+    // Fallback if no ghosts defined in map
+    if (ghostStarts.length === 0) {
+        // Try to find a safe spot or use defaults
+        ghostStarts.push({ x: 13.5, y: 12 }, { x: 14.5, y: 12 });
+    }
+
     // Reset State
     gameState.current = {
-        pacman: { x: 18.5, y: 15, dir: DIRS.LEFT, nextDir: DIRS.LEFT, mouthOpen: 0 },
-        ghosts: [
-            { x: 13.5, y: 12, dir: DIRS.UP, color: GHOST_COLORS[0] },
-            { x: 14.5, y: 12, dir: DIRS.UP, color: GHOST_COLORS[1] }
-        ],
+        pacman: { x: pacmanStart.x, y: pacmanStart.y, dir: DIRS.LEFT, nextDir: DIRS.LEFT, mouthOpen: 0 },
+        ghosts: ghostStarts.map((pos, idx) => ({
+            x: pos.x, 
+            y: pos.y, 
+            dir: DIRS.UP, 
+            color: GHOST_COLORS[idx % GHOST_COLORS.length]
+        })),
         dots,
         particles: [],
         walls,
@@ -305,9 +341,42 @@ const PacmanGame = ({ active, fixedSize = false, maxWidth = 0.6, maxHeight = 0.7
     // Draw Walls
     ctx.fillStyle = WALL_COLOR;
     ctx.beginPath();
+    const wallSize = ts * 0.3; // 20% of tile size - much thinner
+    const offset = (ts - wallSize) / 2;
+
     state.walls.forEach(w => {
-        ctx.fillRect(w.x * ts, w.y * ts, ts, ts);
+        const x = w.x;
+        const y = w.y;
+
+        // Draw smaller wall block (centered)
+        ctx.fillRect(w.x * ts + offset, w.y * ts + offset, wallSize, wallSize);
+        
+        // Connect walls to neighbors for cleaner look
+        // Check neighbors in maze
+        
+        // Right neighbor
+        if (x < MAZE[0].length - 1 && MAZE[y][x+1] === 1) {
+             ctx.fillRect(w.x * ts + offset + wallSize, w.y * ts + offset, offset + 1, wallSize);
+        }
+        // Left neighbor
+        if (x > 0 && MAZE[y][x-1] === 1) {
+             ctx.fillRect(w.x * ts - 1, w.y * ts + offset, offset + 1, wallSize);
+        }
+        // Bottom neighbor
+        if (y < MAZE.length - 1 && MAZE[y+1][x] === 1) {
+             ctx.fillRect(w.x * ts + offset, w.y * ts + offset + wallSize, wallSize, offset + 1);
+        }
+        // Top neighbor
+        if (y > 0 && MAZE[y-1][x] === 1) {
+             ctx.fillRect(w.x * ts + offset, w.y * ts - 1, wallSize, offset + 1);
+        }
     });
+    
+    // Outer boundary removed as requested
+    // ctx.strokeStyle = WALL_COLOR;
+    // ctx.lineWidth = 4;
+    // ctx.strokeRect(2, 2, MAZE[0].length * ts - 4, MAZE.length * ts - 4);
+    
     ctx.shadowBlur = 0;
 
     // Draw Dots
@@ -395,20 +464,32 @@ const PacmanGame = ({ active, fixedSize = false, maxWidth = 0.6, maxHeight = 0.7
         // Init walls/dots for drawing even if game logic isn't running
         const walls = [];
         const dots = [];
+        let pacmanStart = { x: 1, y: 1 };
+        const ghostStarts = [];
+        
         MAZE.forEach((row, y) => {
             row.forEach((cell, x) => {
                 if (cell === 1) walls.push({ x, y });
                 if (cell === 0) dots.push({ x, y, type: 'dot' });
+                if (cell === 4) pacmanStart = { x, y };
+                if (cell === 5) ghostStarts.push({ x, y });
             });
         });
+
+        if (ghostStarts.length === 0) {
+            ghostStarts.push({ x: 13.5, y: 12 }, { x: 14.5, y: 12 });
+        }
+
         // Temp state for render
         gameState.current.walls = walls;
         gameState.current.dots = dots;
-        gameState.current.pacman = { x: 18.5, y: 15, dir: DIRS.LEFT, nextDir: DIRS.LEFT, mouthOpen: 0 };
-        gameState.current.ghosts = [
-             { x: 13.5, y: 12, dir: DIRS.UP, color: GHOST_COLORS[0] },
-             { x: 14.5, y: 12, dir: DIRS.UP, color: GHOST_COLORS[1] }
-        ];
+        gameState.current.pacman = { x: pacmanStart.x, y: pacmanStart.y, dir: DIRS.LEFT, nextDir: DIRS.LEFT, mouthOpen: 0 };
+        gameState.current.ghosts = ghostStarts.map((pos, idx) => ({
+             x: pos.x, 
+             y: pos.y, 
+             dir: DIRS.UP, 
+             color: GHOST_COLORS[idx % GHOST_COLORS.length]
+        }));
         draw();
     }
   }, [active, tileSize]);
@@ -423,9 +504,7 @@ const PacmanGame = ({ active, fixedSize = false, maxWidth = 0.6, maxHeight = 0.7
       />
       
       {/* UI Overlay */}
-      <div className="absolute top-2 left-4 text-white font-bold drop-shadow-md z-10 tracking-widest" style={{ fontSize: Math.max(12, tileSize * 0.7) + 'px' }}>
-        SCORE: {score}
-      </div>
+      {/* Score removed as requested */}
 
       {/* Game Over Screen */}
       {gameOver && (

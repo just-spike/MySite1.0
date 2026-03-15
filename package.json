@@ -13,9 +13,13 @@
     "@fontsource/fusion-pixel-12px-proportional-sc": "^5.2.5",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^8.18.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "postprocessing": "^6.38.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-router-dom": "^7.13.1",
+    "tailwind-merge": "^3.5.0",
     "three": "^0.182.0"
   },
   "devDependencies": {
